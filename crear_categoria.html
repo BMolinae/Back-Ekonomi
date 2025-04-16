@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crear Categoría</title>
+</head>
+<body>
+    <h1>Crear Categoría</h1>
+    <form method="post" action="http://localhost:8000/api/categorias/">
+        <label for="nombre">Nombre de la categoría:</label>
+        <input type="text" name="nombre" id="nombre" required><br><br>
+
+        <label for="tipo">Tipo:</label>
+        <select name="tipo" id="tipo">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+        </select><br><br>
+
+        <input type="submit" value="Crear Categoría">
+    </form>
+</body>
+</html>

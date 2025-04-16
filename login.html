@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+</head>
+<body>
+    <h1>Iniciar sesión en Ekonomi</h1>
+    <form id="login-form">
+        <label>Usuario: <input type="text" id="username" required></label><br>
+        <label>Contraseña: <input type="password" id="password" required></label><br>
+        <button type="submit">Iniciar sesión</button>
+    </form>
+
+    <p id="mensaje"></p>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const mensaje = document.getElementById('mensaje');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api-token-auth/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${username}&password=${password}`
+                });
+
+                if (!response.ok) {
+                    mensaje.textContent = "Error al iniciar sesión";
+                    return;
+                }
+
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                mensaje.textContent = "¡Login exitoso! Redirigiendo...";
+                setTimeout(() => {
+                    window.location.href = "movimientos.html";
+                }, 1000);
+            } catch (error) {
+                console.error("Error al loguear:", error);
+                mensaje.textContent = "Hubo un problema al conectar con el servidor.";
+            }
+        });
+    </script>
+</body>
+</html>

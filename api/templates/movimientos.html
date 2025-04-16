@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Movimientos</title>
+</head>
+<body>
+    <h1>Movimientos</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Monto</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-movimientos"></tbody>
+    </table>
+
+    <script>
+        const token = "ab7f5d466518de19843c4502f88f45899887ad1b";
+
+        fetch('http://127.0.0.1:8000/api/movimientos/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Token ${token}`,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                alert("Token inválido o sesión no iniciada. Código: " + response.status);
+                throw new Error("No autorizado");
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tabla = document.getElementById('tabla-movimientos');
+            data.forEach(mov => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${mov.tipo}</td>
+                    <td>${mov.descripcion}</td>
+                    <td>${mov.monto}</td>
+                    <td>${new Date(mov.fecha).toLocaleString()}</td>
+                `;
+                tabla.appendChild(fila);
+            });
+        })
+        .catch(error => console.error("Error al obtener movimientos:", error));
+    </script>
+</body>
+</html>

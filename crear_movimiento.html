@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Movimiento</title>
+</head>
+<body>
+  <h2>Crear nuevo movimiento</h2>
+  <form id="movimiento-form">
+    <label for="tipo">Tipo:</label>
+    <select name="tipo" id="tipo">
+      <option value="ingreso">Ingreso</option>
+      <option value="gasto">Gasto</option>
+    </select><br><br>
+
+    <label for="descripcion">Descripción:</label>
+    <input type="text" id="descripcion" name="descripcion" required><br><br>
+
+    <label for="monto">Monto:</label>
+    <input type="number" id="monto" name="monto" step="0.01" required><br><br>
+
+    <button type="submit">Enviar</button>
+  </form>
+
+  <p id="respuesta"></p>
+
+  <script>
+    const form = document.getElementById("movimiento-form");
+    const respuesta = document.getElementById("respuesta");
+
+    // Reemplaza con tu token
+    const token = "ab7f5d466518de19843c4502f88f45899887ad1b";
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const data = {
+        tipo: form.tipo.value,
+        descripcion: form.descripcion.value,
+        monto: form.monto.value,
+      };
+
+      fetch("http://127.0.0.1:8000/api/movimientos/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Token ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          respuesta.innerText = "Movimiento creado con éxito ✅";
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          respuesta.innerText = "Error al crear el movimiento ❌";
+        });
+    });
+  </script>
+</body>
+</html>

@@ -23,3 +23,10 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+class PerfilUsuario(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    saldo = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
+
+    def __str__(self):
+        return f'Perfil de {self.usuario.username}'

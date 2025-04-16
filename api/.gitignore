@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Configuración de entorno
+*.env
+
+# Archivos de usuario
+.DS_Store
+*.sqlite3
+
+# Archivos de caché o temporales
+*.log
+*.pot
+*.py[cod]
+*.swp
+*.swo

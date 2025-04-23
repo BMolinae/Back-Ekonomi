@@ -30,24 +30,13 @@ class MovimientoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         movimiento = serializer.save(usuario=request.user)
-
-        # 2) actualiza perfil
         perfil = PerfilUsuario.objects.get(usuario=request.user)
-        if movimiento.tipo == 'ingreso':
-            perfil.saldo += movimiento.monto
-        else:  # gasto
-            perfil.saldo -= movimiento.monto
-            perfil.limite_mensual -= movimiento.monto
-        perfil.save()
-
-        # 3) arma la respuesta incluyendo los nuevos valores
         data = serializer.data
         data.update({
-            "saldo": str(perfil.saldo),
-            "limite_mensual": str(perfil.limite_mensual)
+           "saldo": str(perfil.saldo),
+          "limite_mensual": str(perfil.limite_mensual)
         })
         return Response(data, status=status.HTTP_201_CREATED)
-
 
 class CategoriaListCreateView(generics.ListCreateAPIView):
     queryset = Categoria.objects.all()
@@ -141,17 +130,22 @@ class AddCardView(APIView):
     def post(self, request):
         perfil = PerfilUsuario.objects.get(usuario=request.user)
         card_number = request.data.get('cardNumber')
+        added_amount = Decimal('500000.00')
+
+        # Asigna la tarjeta (pero NO toques aquí el saldo)
         perfil.tarjeta = card_number
-        perfil.saldo += Decimal('500000.00')
         perfil.save()
 
+        # Crea un movimiento de INGRESO de 500k
         Movimiento.objects.create(
             usuario=request.user,
             tipo='ingreso',
             descripcion='Saldo inicial al agregar tarjeta',
-            monto=perfil.saldo
+            monto=added_amount
         )
 
+        # La señal `post_save` se encargará de sumar esos 500k al perfil
+        perfil.refresh_from_db()
         return Response({"saldo": perfil.saldo, "tarjeta": perfil.tarjeta})
 
 

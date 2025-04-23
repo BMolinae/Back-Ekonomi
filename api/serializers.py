@@ -1,17 +1,35 @@
 from rest_framework import serializers
 from .models import Movimiento, Categoria, PerfilUsuario
 from django.contrib.auth.models import User
-
-class MovimientoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Movimiento
-        fields = '__all__'
-        read_only_fields = ['usuario', 'fecha']
+from rest_framework import serializers
+from .models import Movimiento, Categoria
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
-        fields = '__all__'
+        fields = ['id', 'nombre', 'tipo']
+
+class MovimientoSerializer(serializers.ModelSerializer):
+    categoria_nombre = serializers.ReadOnlyField(source='categoria.nombre')
+    categoria        = serializers.PrimaryKeyRelatedField(
+                          queryset=Categoria.objects.all(),
+                          allow_null=True,
+                          required=False
+                       )
+
+    class Meta:
+        model = Movimiento
+        fields = [
+            'id',
+            'tipo',
+            'descripcion',
+            'monto',
+            'categoria',
+            'categoria_nombre',
+            'fecha'
+        ]
+        read_only_fields = ['id', 'fecha', 'categoria_nombre']
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:

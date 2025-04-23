@@ -26,15 +26,17 @@ class MovimientoViewSet(viewsets.ModelViewSet):
         return Movimiento.objects.filter(usuario=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        # 1) valida y salva el movimiento
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         movimiento = serializer.save(usuario=request.user)
+
+        #  Solo actualizamos el saldo, no tocamos limite_mensual
         perfil = PerfilUsuario.objects.get(usuario=request.user)
+
         data = serializer.data
         data.update({
            "saldo": str(perfil.saldo),
-          "limite_mensual": str(perfil.limite_mensual)
+           "limite_mensual": str(perfil.limite_mensual)
         })
         return Response(data, status=status.HTTP_201_CREATED)
 

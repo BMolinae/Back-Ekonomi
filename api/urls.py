@@ -11,7 +11,8 @@ from .views import (
     SetLimitView,
     vista_movimientos_html,
     RecoverPasswordView,
-    ResetPasswordView
+    ResetPasswordView,
+    DocumentView
 )
 
 router = DefaultRouter()
@@ -29,4 +30,6 @@ urlpatterns = [
     path('token-auth/', obtain_auth_token, name='api_token_auth'),
     path('recover-password/', RecoverPasswordView.as_view(), name='recover-password'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+    path('documents/<str:type>/', DocumentView.as_view(), name='documents'),
+
 ]

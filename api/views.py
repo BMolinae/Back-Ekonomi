@@ -1,10 +1,15 @@
 from decimal import Decimal
 from datetime import timedelta
+from io import BytesIO, StringIO
+import logging
+import csv
 
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
+from django.http import FileResponse
+
 
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -16,7 +21,114 @@ from rest_framework.authtoken.models import Token
 from .models import Movimiento, Categoria, PerfilUsuario
 from .serializers import MovimientoSerializer, CategoriaSerializer
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+# Si no lo tienes, para PDF
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+# Configuramos logger
+logger = logging.getLogger(__name__)
+
+
+def generate_monthly_pdf(user):
+    buf = BytesIO()
+    try:
+        c = canvas.Canvas(buf, pagesize=A4)
+        w, h = A4
+        c.setFont("Helvetica-Bold", 18)
+        c.drawString(40, h - 40, f"Informe Mensual de {user.username}")
+        saldo = getattr(user.perfilusuario, 'saldo', 0)
+        c.setFont("Helvetica", 12)
+        c.drawString(40, h - 80, f"Saldo disponible: CLP {saldo}")
+        c.drawString(40, h - 110, "Transacciones recientes:")
+        y = h - 140
+        for m in user.movimiento_set.order_by('-fecha')[:5]:
+            line = f"{m.fecha:%Y-%m-%d}: {m.tipo} CLP {m.monto} – {m.descripcion}"
+            c.drawString(50, y, line)
+            y -= 14
+            if y < 50:
+                c.showPage()
+                y = h - 40
+        c.showPage()
+        c.save()
+        buf.seek(0)
+        return buf
+    except Exception:
+        logger.exception("Error generando PDF mensual")
+        raise
+
+
+def generate_csv(user):
+    # Primero texto con StringIO
+    txt_buf = StringIO()
+    try:
+        writer = csv.writer(txt_buf)
+        writer.writerow(["fecha", "tipo", "monto", "descripcion"])
+        for m in user.movimiento_set.order_by('fecha'):
+            writer.writerow([m.fecha.isoformat(), m.tipo, m.monto, m.descripcion])
+        # Convertimos a bytes
+        csv_bytes = txt_buf.getvalue().encode('utf-8')
+        byte_buf = BytesIO(csv_bytes)
+        byte_buf.seek(0)
+        return byte_buf
+    except Exception:
+        logger.exception("Error generando CSV de transacciones")
+        raise
+
+
+def generate_chart_png(user, chart_id):
+    buf = BytesIO()
+    try:
+        fig, ax = plt.subplots(figsize=(4, 4))
+        if chart_id == 'gauge':
+            ax.pie([30, 70], startangle=90, colors=['#ef476f','#ccc'], wedgeprops={'width':0.5})
+        elif chart_id == 'pie':
+            ax.pie([40, 60], labels=['Gastos','Ingresos'], autopct='%1.1f%%')
+        elif chart_id == 'line':
+            ax.plot([1,2,3,4], [10,30,20,40], marker='o')
+            ax.set_xlabel("Día")
+            ax.set_ylabel("CLP")
+        else:
+            ax.text(0.5,0.5,"N/A",ha='center')
+        ax.axis('equal')
+        fig.savefig(buf, format='png', bbox_inches='tight')
+        plt.close(fig)
+        buf.seek(0)
+        return buf
+    except Exception:
+        logger.exception(f"Error generando PNG para '{chart_id}'")
+        raise
+
+
+class DocumentView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, type, format=None):
+        try:
+            if type == 'monthly':
+                buf = generate_monthly_pdf(request.user)
+                return FileResponse(buf, filename='informe_mensual.pdf', as_attachment=True)
+
+            if type == 'csv':
+                buf = generate_csv(request.user)
+                return FileResponse(buf, filename='transacciones.csv', as_attachment=True)
+
+            if type in ('gauge', 'pie', 'line'):
+                buf = generate_chart_png(request.user, type)
+                return FileResponse(buf, filename=f'{type}.png', as_attachment=True)
+
+            return Response({'detail': 'Tipo no soportado.'}, status=404)
+
+        except Exception:
+            logger.exception(f"Fallo en DocumentView para '{type}'")
+            return Response({'detail': 'Error interno al generar el documento.'}, status=500)
+        
 class MovimientoViewSet(viewsets.ModelViewSet):
     serializer_class = MovimientoSerializer
     permission_classes = [IsAuthenticated]

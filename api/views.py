@@ -124,7 +124,33 @@ def generate_monthly_pdf(user):
         c.setFillColor(colors.grey)
         c.drawString(40, 40, "CB&J Ekonomi © 2025 – Documento generado automáticamente.")
 
+        # 📄 Página 2: Gráficos
         c.showPage()
+
+        graficos = ['gauge', 'pie', 'line']
+        titles = ['Uso del límite mensual', 'Distribución de gastos', 'Comparación mensual']
+        x_pos = 40
+        y_pos = h - 100
+        img_width = 240
+        img_height = 240
+
+        for idx, chart_id in enumerate(graficos):
+            chart_buf = generate_chart_png(user, chart_id)
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(x_pos, y_pos + 10, titles[idx])
+            c.drawImage(ImageReader(chart_buf), x_pos, y_pos - img_height,
+                        width=img_width, height=img_height, mask='auto')
+
+            if idx == 1:
+                x_pos = 40
+                y_pos -= img_height + 100
+            else:
+                x_pos += img_width + 40
+
+        c.setFont("Helvetica-Oblique", 9)
+        c.setFillColor(colors.grey)
+        c.drawString(40, 40, "Gráficos generados automáticamente a partir de tus movimientos.")
+
         c.save()
         buf.seek(0)
         return buf
@@ -170,22 +196,93 @@ def generate_csv(user):
 def generate_chart_png(user, chart_id):
     buf = BytesIO()
     try:
+        from collections import defaultdict
+        import calendar
+        import matplotlib.pyplot as plt
+
         fig, ax = plt.subplots(figsize=(4, 4))
+        perfil = user.perfilusuario
+        movimientos = user.movimiento_set.all()
+
         if chart_id == 'gauge':
-            ax.pie([30, 70], startangle=90, colors=['#ef476f','#ccc'], wedgeprops={'width':0.5})
+            limite = float(perfil.limite_mensual or 0)
+            gastos = sum(float(abs(m.monto)) for m in movimientos if m.tipo == 'gasto')
+            porcentaje_usado = int((gastos / limite) * 100) if limite > 0 else 0
+            porcentaje_restante = 100 - porcentaje_usado
+            ax.pie(
+                [porcentaje_usado, porcentaje_restante],
+                startangle=90,
+                colors=['#ef476f', '#e0e0e0'],
+                wedgeprops={'width': 0.4}
+            )
+            ax.text(0, 0, f"{porcentaje_usado}%", ha='center', va='center', fontsize=16)
+            ax.set_title("Uso del límite mensual")
+
         elif chart_id == 'pie':
-            ax.pie([40, 60], labels=['Gastos','Ingresos'], autopct='%1.1f%%')
+            categorias = defaultdict(float)
+            for m in movimientos:
+                if m.tipo == 'gasto' and m.categoria:
+                    categorias[m.categoria.nombre] += float(abs(m.monto))
+
+            if not categorias:
+                categorias['Sin datos'] = 1
+
+            ax.pie(
+                categorias.values(),
+                labels=categorias.keys(),
+                autopct='%1.1f%%',
+                startangle=90
+            )
+            ax.set_title("Distribución de gastos")
+
         elif chart_id == 'line':
-            ax.plot([1,2,3,4], [10,30,20,40], marker='o')
-            ax.set_xlabel("Día")
-            ax.set_ylabel("CLP")
+            import calendar
+            from datetime import datetime, timedelta
+            from collections import OrderedDict
+
+            hoy = datetime.now()
+            # Obtener últimos 4 meses (mes y año)
+            ultimos_4 = []
+            for i in range(3, -1, -1):
+                mes = (hoy.month - i - 1) % 12 + 1
+                año = hoy.year if hoy.month - i > 0 else hoy.year - 1
+                ultimos_4.append((año, mes))
+
+            labels = [calendar.month_name[mes][:3] for (año, mes) in ultimos_4]
+            ingresos = OrderedDict.fromkeys(ultimos_4, 0)
+            gastos = OrderedDict.fromkeys(ultimos_4, 0)
+
+            for m in movimientos:
+                clave = (m.fecha.year, m.fecha.month)
+                if clave in ingresos:
+                    if m.tipo == 'ingreso':
+                        ingresos[clave] += float(m.monto)
+                    elif m.tipo == 'gasto':
+                        gastos[clave] += float(m.monto)
+
+            ingresos_valores = list(ingresos.values())
+            gastos_valores = list(gastos.values())
+
+            ax.plot(labels, ingresos_valores, marker='o', label='Ingresos', color='#00bfa6', linewidth=2.5)
+            ax.plot(labels, gastos_valores, marker='o', label='Gastos', color='#ff6b6b', linewidth=2.5)
+
+            ax.set_title("Comparación mensual")
+            ax.set_xlabel("Mes")
+            ax.set_ylabel("Monto (CLP)")
+            ax.grid(True)
+            ax.legend()
+
+
+
         else:
-            ax.text(0.5,0.5,"N/A",ha='center')
-        ax.axis('equal')
+            ax.text(0.5, 0.5, "Gráfico no disponible", ha='center')
+
+        fig.tight_layout()
         fig.savefig(buf, format='png', bbox_inches='tight')
         plt.close(fig)
         buf.seek(0)
         return buf
+
     except Exception:
         logger.exception(f"Error generando PNG para '{chart_id}'")
         raise

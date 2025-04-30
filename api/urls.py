@@ -31,5 +31,6 @@ urlpatterns = [
     path('recover-password/', RecoverPasswordView.as_view(), name='recover-password'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
     path('documents/<str:type>/', DocumentView.as_view(), name='documents'),
+    
 
 ]

@@ -24,10 +24,14 @@ def actualizar_saldo_al_crear_movimiento(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Movimiento)
 def revertir_saldo_al_borrar_movimiento(sender, instance, **kwargs):
-    perfil = instance.usuario.perfilusuario
-    # al borrar, revertimos solo el saldo
-    if instance.tipo == 'ingreso':
-        perfil.saldo -= instance.monto
-    else:
+    perfil = getattr(instance.usuario, 'perfilusuario', None)
+    if not perfil:
+        return  # <- esto es clave para evitar el error
+
+    if instance.tipo == 'gasto':
         perfil.saldo += instance.monto
+    elif instance.tipo == 'ingreso':
+        perfil.saldo -= instance.monto
+
     perfil.save()
+

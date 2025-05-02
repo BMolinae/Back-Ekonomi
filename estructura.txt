@@ -1,0 +1,109 @@
+BACK-EKONOMI
+├── api
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── signals.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── migrations
+│   └── templates
+├── EkonomiCBJ
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── models.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+├── crear_categoria.html
+├── crear_movimiento.html
+├── estructura.txt
+├── login.html
+├── db.sqlite3
+├── manage.py
+└── requirements.txt
+
+
+FRONT-EKONOMI
+├── src
+│   ├── app
+│   │   ├── create-account
+│   │   │   ├── create-account-routing.module.ts
+│   │   │   ├── create-account.module.ts
+│   │   │   ├── create-account.page.html
+│   │   │   ├── create-account.page.scss
+│   │   │   ├── create-account.page.spec.ts
+│   │   │   └── create-account.page.ts
+│   │   ├── dashboard
+│   │   │   ├── dashboard-routing.module.ts
+│   │   │   ├── dashboard.module.ts
+│   │   │   ├── dashboard.page.html
+│   │   │   ├── dashboard.page.scss
+│   │   │   ├── dashboard.page.spec.ts
+│   │   │   └── dashboard.page.ts
+│   │   ├── forgot-password
+│   │   │   ├── forgot-password-routing.module.ts
+│   │   │   ├── forgot-password.module.ts
+│   │   │   ├── forgot-password.page.html
+│   │   │   ├── forgot-password.page.scss
+│   │   │   └── forgot-password.page.ts
+│   │   ├── home
+│   │   │   ├── home-routing.module.ts
+│   │   │   ├── home.module.ts
+│   │   │   ├── home.page.html
+│   │   │   ├── home.page.scss
+│   │   │   └── home.page.ts
+│   │   ├── login
+│   │   │   ├── login-routing.module.ts
+│   │   │   ├── login.module.ts
+│   │   │   ├── login.page.html
+│   │   │   ├── login.page.scss
+│   │   │   ├── login.page.spec.ts
+│   │   │   └── login.page.ts
+│   │   ├── services
+│   │   │   ├── auth.service.ts
+│   │   │   └── movimientos.service.ts
+│   │   ├── app-routing.module.ts
+│   │   ├── app.component.html
+│   │   ├── app.component.scss
+│   │   ├── app.component.spec.ts
+│   │   └── app.component.ts
+│   ├── assets
+│   │   ├── fonts
+│   │   ├── icon
+│   │   ├── img
+│   │   └── shapes.svg
+│   ├── environments
+│   │   ├── environment.prod.ts
+│   │   └── environment.ts
+│   ├── theme
+│   │   ├── variables.scss
+│   │   └── global.scss
+│   ├── index.html
+│   ├── main.ts
+│   ├── polyfills.ts
+│   ├── test.ts
+│   └── zone-flags.ts
+├── .browserslistrc
+├── .editorconfig
+├── .eslintrc.json
+├── .gitignore
+├── angular.json
+├── capacitor.config.ts
+├── ionic.config.json
+├── karma.conf.js
+├── package-lock.json
+├── package.json
+├── tsconfig.app.json
+├── tsconfig.json
+└── tsconfig.spec.json
+
+
+
+iniciar backend =   venv\Scripts\activate (activar entorno virtual)
+                    python manage.py runserver
+iniciar frontend =  npm install
+                    npm start // ionic serve

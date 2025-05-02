@@ -485,7 +485,7 @@ class RecoverPasswordView(APIView):
             perfil.token_created_at = timezone.now()
             perfil.save()
 
-            recovery_link = f"http://localhost:8100/reset-password?token={token}"
+            recovery_link = f"https://ekonomi-reset-production.up.railway.app?token={token}"
             # Aquí podrías enviar el email con recovery_link
             return Response(
                 {'status': 'Success', 'recoveryLink': recovery_link},
